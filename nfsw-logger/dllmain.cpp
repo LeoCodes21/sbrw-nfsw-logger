@@ -3,6 +3,7 @@
 #include "Memory.h"
 #include <cstdio>
 #include <corecrt_share.h>
+#include <cstdlib>
 
 FILE* logStream;
 FILE* consoleStream;
@@ -26,7 +27,7 @@ void __declspec(naked) GameLogHook()
 
 	if (strlen(gameLogText) < 1024)
 	{
-		printf("LOG [%s] :: %s\n", gameLogCategory, gameLogText);
+		printf("INFO: %s\n", gameLogText);
 	} else
 	{
 		printf("WARN: [%s] Long message (%d chars) was not logged\n", gameLogCategory, strlen(gameLogText));
@@ -47,6 +48,13 @@ DWORD WINAPI Init(LPVOID)
 
 	printf("INFO: nfsw-logger initialized\n");
 
+	std::atexit([]()
+	{
+		FreeConsole();
+		fclose(consoleStream);
+		fclose(logStream);
+	});
+
 	return 1;
 }
 
@@ -64,9 +72,6 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
-		FreeConsole();
-		fclose(consoleStream);
-		fclose(logStream);
 		break;
 	}
 	return TRUE;
